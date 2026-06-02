@@ -1,0 +1,19 @@
+customer_id,name,email,tier,account_status,registration_date,preferred_language,total_lifetime_value,notes_flag
+CUS-0001,Sofia Martins,sofia.martins@example.com,premium,active,2023-04-12,pt,1247.50,previous_complaint
+CUS-0002,Lukas Bauer,lukas.bauer@example.com,standard,active,2024-01-18,de,245.00,none
+CUS-0003,Emma Dubois,emma.dubois@example.com,vip,active,2021-09-03,fr,5840.00,vip_attention
+CUS-0004,James O'Brien,james.obrien@example.com,standard,active,2024-08-22,en,87.50,none
+CUS-0005,Marta Kowalski,marta.kowalski@example.com,standard,suspended,2023-11-30,en,156.00,previous_complaint
+CUS-0006,Riccardo Bianchi,riccardo.bianchi@example.com,premium,active,2022-06-14,it,2100.00,none
+CUS-0007,Anna van der Berg,anna.vanderberg@example.com,standard,active,2024-03-07,en,425.00,none
+CUS-0008,Carlos Hernandez,carlos.hernandez@example.com,premium,active,2022-12-19,es,1875.00,none
+CUS-0009,Sarah Mitchell,sarah.mitchell@example.com,vip,active,2020-05-11,en,8920.00,vip_attention
+CUS-0010,Tomas Silva,tomas.silva@example.com,standard,active,2024-09-15,pt,142.00,none
+CUS-0011,Ingrid Larsson,ingrid.larsson@example.com,standard,closed,2023-02-08,en,320.00,none
+CUS-0012,Pierre Lefevre,pierre.lefevre@example.com,standard,active,2024-05-22,fr,198.00,none
+CUS-0013,Yuki Tanaka,yuki.tanaka@example.com,vip,active,2021-11-04,en,4500.00,vip_attention
+CUS-0014,Hassan Rahman,hassan.rahman@example.com,standard,active,2024-06-30,en,75.00,none
+CUS-0015,Beatrice Romano,beatrice.romano@example.com,premium,suspended,2022-08-17,it,1320.00,previous_complaint
+CUS-0016,Ana Pereira,ana.pereira@example.com,standard,active,2024-10-05,pt,65.00,none
+CUS-0017,Klaus Mueller,klaus.mueller@example.com,premium,active,2023-01-25,de,1890.00,none
+CUS-0018,Sophie Laurent,sophie.laurent@example.com,standard,closed,2023-07-19,fr,580.00,none
