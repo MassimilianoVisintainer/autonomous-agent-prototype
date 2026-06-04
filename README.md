@@ -4,9 +4,11 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 1 complete** — keyword intent classifier and chat interface.
+**Slice 2 complete** — Gemini-powered intent classifier.
 
-The chat interface is live. A deterministic keyword classifier maps user queries to one of the twelve intents. Confidence is capped at 0.6 to reflect that this is a weak placeholder; Slice 2 will replace it with a Gemini-powered classifier. No response generation yet.
+The keyword classifier has been replaced with a Gemini 1.5 Flash call. Classifications now include the model's own reasoning sentence visible in the sidebar. A file-based response cache (`.cache/`) avoids redundant API calls during development. Responses degrade gracefully to `ambiguous_query` if the API is unavailable. No response generation yet.
+
+A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
 ## Installation
 

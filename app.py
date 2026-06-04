@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 1: keyword intent classifier and chat interface."""
+"""Streamlit entry point — Slice 2: Gemini intent classifier and chat interface."""
 
 import streamlit as st
 
@@ -8,7 +8,7 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 1 — keyword intent classifier")
+st.caption("Slice 2 — Gemini intent classifier")
 
 # --- Session state -----------------------------------------------------------
 
@@ -18,6 +18,7 @@ if "messages" not in st.session_state:
 # --- Sidebar -----------------------------------------------------------------
 
 with st.sidebar:
+    st.caption("Powered by Gemini 2.5 Flash")
     st.header("Reasoning trace")
 
     last_classification = None
@@ -29,8 +30,8 @@ with st.sidebar:
     if last_classification is not None:
         st.write(f"**Intent:** {last_classification.intent.value}")
         st.write(f"**Confidence:** {last_classification.confidence:.2f}")
-        trigger_display = last_classification.matched_trigger or "no trigger matched"
-        st.write(f"**Matched trigger:** `{trigger_display}`")
+        reasoning_display = last_classification.reasoning or "(no reasoning provided)"
+        st.write(f"**Reasoning:** {reasoning_display}")
         st.write(f"**Method:** {last_classification.method}")
     else:
         st.write("Type a query to see the reasoning trace.")
@@ -66,11 +67,18 @@ if user_input:
 
     result = agent.classify_query(user_input)
 
-    response = (
-        f"I classified this as **{result.intent.value}** "
-        f"(confidence {result.confidence:.2f}). "
-        "Response generation is not implemented yet — Slice 3 will add it."
-    )
+    if result.method == "llm_error":
+        response = (
+            f"Classification failed ({result.reasoning}). "
+            "Please check that GOOGLE_API_KEY is set and try again."
+        )
+    else:
+        response = (
+            f"I classified this as **{result.intent.value}** "
+            f"(confidence {result.confidence:.2f}). "
+            "Response generation is not implemented yet — Slice 3 will add it."
+        )
+
     st.session_state.messages.append(
         {"role": "assistant", "content": response, "classification": result}
     )

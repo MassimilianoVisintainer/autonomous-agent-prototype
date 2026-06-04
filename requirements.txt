@@ -2,3 +2,4 @@ pandas
 streamlit
 pytest
 python-dotenv
+google-genai
