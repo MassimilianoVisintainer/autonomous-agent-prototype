@@ -1,17 +1,30 @@
 """Orchestration layer for the customer-support agent.
 
-In Slice 1 the orchestrator only performs intent classification. Later slices
-will extend this module with retrieval, tool routing, response generation,
-and escalation — all sequenced through this entry point.
+Slice 3: the orchestrator now performs classification (via src.nlu) followed by
+dense-embedding retrieval (via src.retrieval). Response generation will be added
+in Slice 4.
 """
 
+from dataclasses import dataclass
+
 from src.nlu import ClassificationResult, classify
+from src import retrieval
+from src.retrieval import RetrievedChunk
+
+
+@dataclass(frozen=True)
+class AgentResponse:
+    classification: ClassificationResult
+    retrieved_chunks: list[RetrievedChunk]
+
+
+def process_query(query: str) -> AgentResponse:
+    """Classify the query and retrieve the top-5 relevant KB chunks."""
+    classification = classify(query)
+    chunks = retrieval.retrieve(query, k=5)
+    return AgentResponse(classification=classification, retrieved_chunks=chunks)
 
 
 def classify_query(query: str) -> ClassificationResult:
-    """Classify a customer query and return a ClassificationResult.
-
-    Acts as the single entry point so that app.py and tests never reach
-    directly into the NLU module.
-    """
+    """Backward-compatible entry point that returns only the classification."""
     return classify(query)

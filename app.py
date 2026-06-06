@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 2: Gemini intent classifier and chat interface."""
+"""Streamlit entry point — Slice 3: embedding-based retrieval."""
 
 import streamlit as st
 
@@ -8,7 +8,7 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 2 — Gemini intent classifier")
+st.caption("Slice 3 — Embedding-based retrieval")
 
 # --- Session state -----------------------------------------------------------
 
@@ -19,28 +19,45 @@ if "messages" not in st.session_state:
 
 with st.sidebar:
     st.caption("Powered by Gemini 2.5 Flash")
+
+    # Reasoning trace ---------------------------------------------------------
     st.header("Reasoning trace")
 
-    last_classification = None
+    last_response = None
     for msg in reversed(st.session_state.messages):
-        if msg["role"] == "assistant" and "classification" in msg:
-            last_classification = msg["classification"]
+        if msg["role"] == "assistant" and "agent_response" in msg:
+            last_response = msg["agent_response"]
             break
 
-    if last_classification is not None:
-        st.write(f"**Intent:** {last_classification.intent.value}")
-        st.write(f"**Confidence:** {last_classification.confidence:.2f}")
-        reasoning_display = last_classification.reasoning or "(no reasoning provided)"
-        st.write(f"**Reasoning:** {reasoning_display}")
-        st.write(f"**Method:** {last_classification.method}")
+    if last_response is not None:
+        cl = last_response.classification
+        st.write(f"**Intent:** {cl.intent.value}")
+        st.write(f"**Confidence:** {cl.confidence:.2f}")
+        st.write(f"**Reasoning:** {cl.reasoning or '(no reasoning provided)'}")
+        st.write(f"**Method:** {cl.method}")
     else:
         st.write("Type a query to see the reasoning trace.")
 
     st.caption(
-        "Response generation, retrieval, tool calls, and escalation "
-        "are not yet implemented."
+        "Response generation, tool calls, and escalation are not yet implemented."
     )
 
+    # Retrieved chunks --------------------------------------------------------
+    st.header("Retrieved chunks")
+
+    if last_response is not None and last_response.retrieved_chunks:
+        for rc in last_response.retrieved_chunks:
+            c = rc.chunk
+            preview = c.content[:120] + ("…" if len(c.content) > 120 else "")
+            st.markdown(f"**{c.kb_id}** &nbsp;·&nbsp; score: `{rc.score:.2f}` &nbsp;·&nbsp; {c.topic}")
+            st.caption(preview)
+            with st.expander(c.kb_id):
+                st.write(c.content)
+                st.caption(f"Source: {c.source_doc}")
+    else:
+        st.write("Top knowledge base matches will appear here after the first query.")
+
+    # Data loaded -------------------------------------------------------------
     with st.expander("Data loaded", expanded=False):
         kb = load_knowledge_base()
         customers = load_customers()
@@ -65,22 +82,23 @@ user_input = st.chat_input("Type your question here...")
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    result = agent.classify_query(user_input)
+    result = agent.process_query(user_input)
+    cl = result.classification
 
-    if result.method == "llm_error":
+    if cl.method == "llm_error":
         response = (
-            f"Classification failed ({result.reasoning}). "
+            f"Classification failed ({cl.reasoning}). "
             "Please check that GOOGLE_API_KEY is set and try again."
         )
     else:
         response = (
-            f"I classified this as **{result.intent.value}** "
-            f"(confidence {result.confidence:.2f}). "
-            "Response generation is not implemented yet — Slice 3 will add it."
+            f"I classified this as **{cl.intent.value}** "
+            f"(confidence {cl.confidence:.2f}). "
+            "Response generation is not implemented yet — Slice 4 will add it."
         )
 
     st.session_state.messages.append(
-        {"role": "assistant", "content": response, "classification": result}
+        {"role": "assistant", "content": response, "agent_response": result}
     )
 
     st.rerun()

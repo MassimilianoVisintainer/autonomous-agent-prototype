@@ -4,6 +4,7 @@ Each test verifies that the corresponding CSV loads with the expected row count
 and passes at least one shallow structural check.
 """
 
+import datetime
 import re
 
 from src.data_loaders import (
@@ -21,6 +22,10 @@ def test_knowledge_base_loads_with_expected_count():
     pattern = re.compile(r"^[A-Z]{2}-\d{3}$")
     for chunk in chunks:
         assert pattern.match(chunk.kb_id), f"Unexpected kb_id format: {chunk.kb_id}"
+    # New schema: source_doc is a non-empty string; last_updated is a date
+    first = chunks[0]
+    assert isinstance(first.source_doc, str) and len(first.source_doc) > 0
+    assert isinstance(first.last_updated, datetime.date)
 
 
 def test_customers_loads_with_expected_count():

@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 2 complete** — Gemini-powered intent classifier.
+**Slice 3 complete** — Embedding-based retrieval.
 
-The keyword classifier has been replaced with a Gemini 1.5 Flash call. Classifications now include the model's own reasoning sentence visible in the sidebar. A file-based response cache (`.cache/`) avoids redundant API calls during development. Responses degrade gracefully to `ambiguous_query` if the API is unavailable. No response generation yet.
+Retrieval is now active. Every query is embedded with `all-MiniLM-L6-v2` (sentence-transformers) and the top-5 most similar knowledge base chunks are retrieved by cosine similarity. The sidebar shows each chunk with its score, a content preview, and an expandable full view. Response generation is still pending (Slice 4).
 
 A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 

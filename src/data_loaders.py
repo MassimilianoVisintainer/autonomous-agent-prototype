@@ -19,7 +19,9 @@ class KnowledgeBaseChunk:
     kb_id: str
     category: str
     topic: str
-    description: str
+    content: str
+    source_doc: str
+    last_updated: datetime.date
     applies_to_products: list[str]
     requires_authority_check: bool
 
@@ -75,8 +77,8 @@ def _none_if_blank(value: str) -> str | None:
 
 
 def load_knowledge_base(path: str | None = None) -> list[KnowledgeBaseChunk]:
-    """Load knowledge_base_outline.csv and return typed KnowledgeBaseChunk instances."""
-    csv_path = path if path is not None else str(DATA_DIR / "knowledge_base_outline.csv")
+    """Load knowledge_base.csv and return typed KnowledgeBaseChunk instances."""
+    csv_path = path if path is not None else str(DATA_DIR / "knowledge_base.csv")
     df = pd.read_csv(csv_path, dtype=str)
     chunks = []
     for _, row in df.iterrows():
@@ -90,7 +92,9 @@ def load_knowledge_base(path: str | None = None) -> list[KnowledgeBaseChunk]:
                 kb_id=str(row["kb_id"]).strip(),
                 category=str(row["category"]).strip(),
                 topic=str(row["topic"]).strip(),
-                description=str(row["description"]).strip(),
+                content=str(row["content"]).strip(),
+                source_doc=str(row["source_doc"]).strip(),
+                last_updated=datetime.date.fromisoformat(str(row["last_updated"]).strip()),
                 applies_to_products=products,
                 requires_authority_check=str(row["requires_authority_check"]).strip().lower() == "true",
             )
