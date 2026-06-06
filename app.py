@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 3: embedding-based retrieval."""
+"""Streamlit entry point — Slice 4: Grounded response generation."""
 
 import streamlit as st
 
@@ -8,7 +8,7 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 3 — Embedding-based retrieval")
+st.caption("Slice 4 — Grounded response generation")
 
 # --- Session state -----------------------------------------------------------
 
@@ -20,15 +20,15 @@ if "messages" not in st.session_state:
 with st.sidebar:
     st.caption("Powered by Gemini 2.5 Flash")
 
-    # Reasoning trace ---------------------------------------------------------
-    st.header("Reasoning trace")
-
+    # Find the most recent assistant response
     last_response = None
     for msg in reversed(st.session_state.messages):
         if msg["role"] == "assistant" and "agent_response" in msg:
             last_response = msg["agent_response"]
             break
 
+    # Reasoning trace ---------------------------------------------------------
+    st.header("Reasoning trace")
     if last_response is not None:
         cl = last_response.classification
         st.write(f"**Intent:** {cl.intent.value}")
@@ -38,18 +38,32 @@ with st.sidebar:
     else:
         st.write("Type a query to see the reasoning trace.")
 
-    st.caption(
-        "Response generation, tool calls, and escalation are not yet implemented."
-    )
+    st.caption("Tool calls and escalation are not yet implemented.")
+
+    # Citations ---------------------------------------------------------------
+    st.header("Citations")
+    if last_response is not None:
+        gen = last_response.generation
+        n_cited = len(gen.citations)
+        n_retrieved = len(last_response.retrieved_chunks)
+        if gen.citations:
+            st.write(f"Cited {n_cited} of {n_retrieved} retrieved chunks")
+            for src in gen.citations:
+                st.markdown(f"- {src}")
+        else:
+            st.write("No citations in this response")
+    else:
+        st.write("Citations from the response will appear here.")
 
     # Retrieved chunks --------------------------------------------------------
     st.header("Retrieved chunks")
-
     if last_response is not None and last_response.retrieved_chunks:
         for rc in last_response.retrieved_chunks:
             c = rc.chunk
             preview = c.content[:120] + ("…" if len(c.content) > 120 else "")
-            st.markdown(f"**{c.kb_id}** &nbsp;·&nbsp; score: `{rc.score:.2f}` &nbsp;·&nbsp; {c.topic}")
+            st.markdown(
+                f"**{c.kb_id}** &nbsp;·&nbsp; score: `{rc.score:.2f}` &nbsp;·&nbsp; {c.topic}"
+            )
             st.caption(preview)
             with st.expander(c.kb_id):
                 st.write(c.content)
@@ -83,22 +97,10 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     result = agent.process_query(user_input)
-    cl = result.classification
-
-    if cl.method == "llm_error":
-        response = (
-            f"Classification failed ({cl.reasoning}). "
-            "Please check that GOOGLE_API_KEY is set and try again."
-        )
-    else:
-        response = (
-            f"I classified this as **{cl.intent.value}** "
-            f"(confidence {cl.confidence:.2f}). "
-            "Response generation is not implemented yet — Slice 4 will add it."
-        )
+    response_text = result.generation.text
 
     st.session_state.messages.append(
-        {"role": "assistant", "content": response, "agent_response": result}
+        {"role": "assistant", "content": response_text, "agent_response": result}
     )
 
     st.rerun()

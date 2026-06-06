@@ -1,28 +1,35 @@
 """Orchestration layer for the customer-support agent.
 
-Slice 3: the orchestrator now performs classification (via src.nlu) followed by
-dense-embedding retrieval (via src.retrieval). Response generation will be added
-in Slice 4.
+Slice 4: the orchestrator performs classification (src.nlu), dense-embedding
+retrieval (src.retrieval), and grounded response generation (src.grounding).
+Tool calls and escalation logic are deferred to subsequent slices.
 """
 
 from dataclasses import dataclass
 
 from src.nlu import ClassificationResult, classify
-from src import retrieval
+from src import retrieval, grounding
 from src.retrieval import RetrievedChunk
+from src.grounding import GenerationResult
 
 
 @dataclass(frozen=True)
 class AgentResponse:
     classification: ClassificationResult
     retrieved_chunks: list[RetrievedChunk]
+    generation: GenerationResult
 
 
 def process_query(query: str) -> AgentResponse:
-    """Classify the query and retrieve the top-5 relevant KB chunks."""
+    """Classify, retrieve, and generate a grounded response for a customer query."""
     classification = classify(query)
-    chunks = retrieval.retrieve(query, k=5)
-    return AgentResponse(classification=classification, retrieved_chunks=chunks)
+    retrieved_chunks = retrieval.retrieve(query, k=5)
+    generation = grounding.generate_response(query, classification, retrieved_chunks)
+    return AgentResponse(
+        classification=classification,
+        retrieved_chunks=retrieved_chunks,
+        generation=generation,
+    )
 
 
 def classify_query(query: str) -> ClassificationResult:

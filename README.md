@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 3 complete** — Embedding-based retrieval.
+**Slice 4 complete** — Grounded response generation.
 
-Retrieval is now active. Every query is embedded with `all-MiniLM-L6-v2` (sentence-transformers) and the top-5 most similar knowledge base chunks are retrieved by cosine similarity. The sidebar shows each chunk with its score, a content preview, and an expandable full view. Response generation is still pending (Slice 4).
+The agent now produces substantive responses grounded in retrieved knowledge-base chunks, with inline citations to `source_doc` strings. Two intents use deterministic templates (`ambiguous_query` → clarification, `out_of_scope` → refusal). All others use a Gemini call with an intent-aware system prompt that adjusts tone for affective queries and acknowledges transactional requests. The Citations sidebar panel shows which sources were cited. Tool calls for transactional intents and confidence-based escalation are pending (Slice 5+).
 
 A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
