@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 4 complete** — Grounded response generation.
+**Slice 5 complete** — Tool layer for transactional intents.
 
-The agent now produces substantive responses grounded in retrieved knowledge-base chunks, with inline citations to `source_doc` strings. Two intents use deterministic templates (`ambiguous_query` → clarification, `out_of_scope` → refusal). All others use a Gemini call with an intent-aware system prompt that adjusts tone for affective queries and acknowledges transactional requests. The Citations sidebar panel shows which sources were cited. Tool calls for transactional intents and confidence-based escalation are pending (Slice 5+).
+Transactional intents (`order_status`, `order_modify`, `order_cancel`, `refund_request`) now read from the orders data and enforce authority thresholds: €100 refund limit, 24-hour cancellation window, modifiable-status check. All operations are read-only at the persistence level for evaluation reproducibility. The Tool execution sidebar panel shows which tool was called and its status. Structural escalation routing is pending (Slice 6).
 
 A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 

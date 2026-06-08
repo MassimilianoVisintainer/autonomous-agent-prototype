@@ -10,16 +10,23 @@ citations post-hoc by substring matching.
 Two intents are handled by deterministic templates and never call the LLM:
   - AMBIGUOUS_QUERY  → clarification request
   - OUT_OF_SCOPE     → polite refusal with redirection
-All other intents use a single Gemini call with an intent-aware system prompt.
+All other intents use a single Gemini call with an intent-aware system prompt
+that now includes the structured output of any tool that was called.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from src.intents import Intent
 from src.nlu import ClassificationResult
 from src.retrieval import RetrievedChunk
 from src import llm_client
 from src.llm_client import LLMClientError
+
+if TYPE_CHECKING:
+    from src.tools import ToolResult
 
 
 @dataclass(frozen=True)
@@ -47,26 +54,58 @@ You are a customer support agent for an EU-based electronics-accessories retaile
 Classified intent: {intent} (confidence: {confidence})
 
 INSTRUCTIONS
-1. Answer the customer's question using ONLY the information in the knowledge-base
-   chunks provided below. Do not use any other knowledge.
-2. Cite every claim you make by including the source_doc string in parentheses,
-   e.g. "(Returns Policy v2.3, §4.1)". Use the exact source_doc strings as they
-   appear in the chunks.
-3. If the retrieved chunks do not contain the information needed to answer the
-   question, say "I don't have that information available" rather than guessing.
+1. Answer the customer's question using the tool result (when present) and the
+   knowledge-base chunks below. Prefer tool result data for transactional facts
+   (order status, amounts, dates); prefer chunks for policy and product information.
+2. Cite every policy or product claim by including the source_doc string in
+   parentheses, e.g. "(Returns Policy v2.3, §4.1)".
+3. If neither the tool result nor the chunks contain the information needed,
+   say "I don't have that information available" rather than guessing.
 4. Keep your response concise: two or three short paragraphs at most.
 
 TONE CALIBRATION
 - Routine queries (product info, policies, shipping, account): be helpful and direct.
 - Affective queries (complaint, multi_issue_dispute): begin with a brief empathetic
   acknowledgement of the customer's frustration before addressing the substance.
-- Transactional queries that require a system action (order_status, order_modify,
-  order_cancel, refund_request): acknowledge the request clearly and describe what
-  action would be taken, but state honestly that the tool integration is not yet
-  active and that a human agent can assist in the meantime.
+- Transactional queries: use the tool result to give a specific, grounded answer.
+
+TOOL RESULT HANDLING — respond according to the status value:
+- ok: Report the action taken or information found. Be specific — use order IDs,
+  amounts, statuses, and dates from the data. Do NOT use vague placeholders.
+- not_found: Explain that no order with that identifier was found, and ask the
+  customer to double-check the order number.
+- missing_identifier: Ask the customer for the order number, as their query did
+  not include one.
+- exceeded_authority: Acknowledge the request. Explain clearly that the operation
+  requires senior authorization beyond what you can process directly, and that a
+  human agent will need to handle it. Do NOT claim the action has been processed.
+- out_of_window: Explain the time or state constraint that prevents the action
+  (cancellation window elapsed, order already dispatched, etc.), referencing the
+  relevant policy chunks where applicable.
+- error: Apologise for a technical issue and offer to connect the customer with
+  a human agent.
+
+TOOL EXECUTION RESULT
+{tool_result_block}
 
 KNOWLEDGE BASE CHUNKS
 {chunks_formatted}"""
+
+
+def _format_tool_result(tool_result: ToolResult | None) -> str:
+    if tool_result is None:
+        return "No tool was called for this query."
+    lines = [
+        f"Tool: {tool_result.tool}",
+        f"Status: {tool_result.status}",
+    ]
+    if tool_result.reason:
+        lines.append(f"Reason: {tool_result.reason}")
+    if tool_result.data:
+        lines.append("Data:")
+        for k, v in tool_result.data.items():
+            lines.append(f"  {k}: {v}")
+    return "\n".join(lines)
 
 
 def _format_chunks(retrieved_chunks: list[RetrievedChunk]) -> str:
@@ -99,6 +138,7 @@ def generate_response(
     query: str,
     classification: ClassificationResult,
     retrieved_chunks: list[RetrievedChunk],
+    tool_result: ToolResult | None = None,
 ) -> GenerationResult:
     """Generate a grounded response appropriate to the classified intent."""
     if classification.intent == Intent.AMBIGUOUS_QUERY:
@@ -110,11 +150,11 @@ def generate_response(
             text=REFUSAL_TEMPLATE, citations=[], method="refusal_template"
         )
 
-    chunks_formatted = _format_chunks(retrieved_chunks)
     system_prompt = GENERATION_SYSTEM_PROMPT_TEMPLATE.format(
         intent=classification.intent.value,
         confidence=f"{classification.confidence:.2f}",
-        chunks_formatted=chunks_formatted,
+        tool_result_block=_format_tool_result(tool_result),
+        chunks_formatted=_format_chunks(retrieved_chunks),
     )
 
     try:

@@ -159,3 +159,55 @@ def test_format_chunks_renders_chunks_in_order():
     assert "Shipping Policy v1.0, §2.1" in result
     # First chunk's source appears before the second's
     assert result.index("Returns Policy v2.3, §4.1") < result.index("Shipping Policy v1.0, §2.1")
+
+
+# ---------------------------------------------------------------------------
+# Tool result integration tests
+# ---------------------------------------------------------------------------
+
+def test_generation_with_ok_tool_result_includes_data_in_prompt():
+    from src.tools import ToolResult
+    tool_result = ToolResult(
+        status="ok",
+        tool="lookup_order",
+        data={"order_id": "ORD-1024", "status": "in_transit", "total_amount": 145.0},
+        reason=None,
+    )
+    captured_prompts = []
+
+    def capture_complete(system, user, json_mode=False, model=None):
+        captured_prompts.append(system)
+        return "Your order ORD-1024 is currently in transit."
+
+    with patch.object(llm_client, "complete", side_effect=capture_complete):
+        result = generate_response(
+            "Where is my order ORD-1024?",
+            _classification(Intent.ORDER_STATUS),
+            SAMPLE_CHUNKS,
+            tool_result=tool_result,
+        )
+
+    assert result.method == "llm"
+    assert len(captured_prompts) == 1
+    system_prompt = captured_prompts[0]
+    assert "ORD-1024" in system_prompt
+    assert "in_transit" in system_prompt
+
+
+def test_generation_with_exceeded_authority_tool_result_handled_gracefully():
+    from src.tools import ToolResult
+    tool_result = ToolResult(
+        status="exceeded_authority",
+        tool="process_refund",
+        data={"order_id": "ORD-1003", "total_amount": 245.0, "authority_limit": 100.0},
+        reason="Senior authorization required.",
+    )
+    with patch.object(llm_client, "complete", return_value="I'm sorry, this refund requires senior authorization.") as mock_complete:
+        result = generate_response(
+            "I want a refund on ORD-1003",
+            _classification(Intent.REFUND_REQUEST),
+            SAMPLE_CHUNKS,
+            tool_result=tool_result,
+        )
+    assert result.method == "llm"
+    assert mock_complete.call_count == 1

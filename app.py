@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 4: Grounded response generation."""
+"""Streamlit entry point — Slice 5: Tool layer for transactional intents."""
 
 import streamlit as st
 
@@ -8,7 +8,7 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 4 — Grounded response generation")
+st.caption("Slice 5 — Tool layer for transactional intents")
 
 # --- Session state -----------------------------------------------------------
 
@@ -20,7 +20,6 @@ if "messages" not in st.session_state:
 with st.sidebar:
     st.caption("Powered by Gemini 2.5 Flash")
 
-    # Find the most recent assistant response
     last_response = None
     for msg in reversed(st.session_state.messages):
         if msg["role"] == "assistant" and "agent_response" in msg:
@@ -38,22 +37,42 @@ with st.sidebar:
     else:
         st.write("Type a query to see the reasoning trace.")
 
-    st.caption("Tool calls and escalation are not yet implemented.")
+    st.caption("Escalation routing is not yet implemented.")
 
     # Citations ---------------------------------------------------------------
     st.header("Citations")
     if last_response is not None:
         gen = last_response.generation
-        n_cited = len(gen.citations)
-        n_retrieved = len(last_response.retrieved_chunks)
         if gen.citations:
-            st.write(f"Cited {n_cited} of {n_retrieved} retrieved chunks")
+            st.write(f"Cited {len(gen.citations)} of {len(last_response.retrieved_chunks)} retrieved chunks")
             for src in gen.citations:
                 st.markdown(f"- {src}")
         else:
             st.write("No citations in this response")
     else:
         st.write("Citations from the response will appear here.")
+
+    # Tool execution ----------------------------------------------------------
+    st.header("Tool execution")
+    tr = last_response.tool_result if last_response is not None else None
+    if tr is not None:
+        _STATUS_STYLE = {
+            "ok": ("green", "✓"),
+            "exceeded_authority": ("orange", "⚠"),
+            "out_of_window": ("orange", "⚠"),
+            "not_found": ("red", "✗"),
+            "missing_identifier": ("red", "✗"),
+            "error": ("red", "✗"),
+        }
+        colour, icon = _STATUS_STYLE.get(tr.status, ("grey", "·"))
+        st.write(f"**Tool:** `{tr.tool}`")
+        st.markdown(f"**Status:** :{colour}[{icon} {tr.status}]")
+        if tr.reason:
+            st.caption(tr.reason)
+        if tr.data:
+            st.json(tr.data)
+    else:
+        st.write("Tool calls for transactional queries will appear here.")
 
     # Retrieved chunks --------------------------------------------------------
     st.header("Retrieved chunks")
@@ -97,10 +116,9 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     result = agent.process_query(user_input)
-    response_text = result.generation.text
 
     st.session_state.messages.append(
-        {"role": "assistant", "content": response_text, "agent_response": result}
+        {"role": "assistant", "content": result.generation.text, "agent_response": result}
     )
 
     st.rerun()

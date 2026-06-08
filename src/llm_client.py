@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 import pathlib
+import time
 
 from dotenv import load_dotenv
 
@@ -82,21 +83,33 @@ def complete(
         if key in cache:
             return cache[key]
 
-    try:
-        config = types.GenerateContentConfig(system_instruction=system)
-        if json_mode:
-            config = types.GenerateContentConfig(
-                system_instruction=system,
-                response_mime_type="application/json",
-            )
-        response = _client.models.generate_content(
-            model=model,
-            contents=user,
-            config=config,
+    config = types.GenerateContentConfig(system_instruction=system)
+    if json_mode:
+        config = types.GenerateContentConfig(
+            system_instruction=system,
+            response_mime_type="application/json",
         )
-        text: str = response.text
-    except Exception as exc:
-        raise LLMClientError(f"Gemini API call failed: {exc}") from exc
+
+    _MAX_RETRIES = 3
+    _RETRY_DELAY = 5  # seconds between retries on 503
+    last_exc: Exception | None = None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            response = _client.models.generate_content(
+                model=model,
+                contents=user,
+                config=config,
+            )
+            text: str = response.text
+            break
+        except Exception as exc:
+            last_exc = exc
+            if "503" in str(exc) and attempt < _MAX_RETRIES - 1:
+                time.sleep(_RETRY_DELAY)
+                continue
+            raise LLMClientError(f"Gemini API call failed: {exc}") from exc
+    else:
+        raise LLMClientError(f"Gemini API call failed after {_MAX_RETRIES} attempts: {last_exc}")
 
     if caching_enabled:
         cache[key] = text
