@@ -1,8 +1,9 @@
 """Central LLM API client for the customer-support agent prototype.
 
-Wraps google-genai to call Gemini 2.0 Flash. All modules that need to make LLM
-calls (NLU, response generation, escalation reasoning, rubric scoring) must
-import through this module so that setup, caching, and error handling are shared.
+Wraps google-genai to call Gemini 3.1 Flash Lite. All modules that need to make
+LLM calls (NLU, response generation, escalation reasoning, rubric scoring) must
+import through this module so that setup, caching, retry, and error handling are
+shared.
 
 The module reads GOOGLE_API_KEY from the environment at import time (via
 python-dotenv so a .env file at the repo root is automatically picked up).
@@ -11,12 +12,16 @@ complete() raises LLMClientError immediately.
 
 Responses are cached to .cache/llm_responses.json by default to avoid
 redundant API calls during development. Set DISABLE_LLM_CACHE=1 to bypass.
+
+Rate-limit errors (HTTP 429) are retried automatically with delays of
+5s, 15s, and 60s before giving up and raising LLMClientError.
 """
 
 import hashlib
 import json
 import os
 import pathlib
+import sys
 import time
 
 from dotenv import load_dotenv
@@ -38,9 +43,17 @@ else:
     _client = None
     LLM_AVAILABLE = False
 
+RETRY_DELAYS = [5, 15, 60]
+RATE_LIMIT_INDICATORS = ("429", "rate limit", "quota", "ResourceExhausted")
+
 
 class LLMClientError(RuntimeError):
     """Raised when an LLM API call fails for any reason."""
+
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(indicator.lower() in msg for indicator in RATE_LIMIT_INDICATORS)
 
 
 def _load_cache() -> dict[str, str]:
@@ -66,11 +79,12 @@ def complete(
     system: str,
     user: str,
     json_mode: bool = False,
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-3.1-flash-lite",
 ) -> str:
     """Call the Gemini model and return the response text.
 
-    Raises LLMClientError on any failure (missing key, network error, etc.).
+    Retries up to 3 times on rate-limit (429) errors with backoff.
+    Raises LLMClientError on persistent failure or non-retryable errors.
     """
     if not LLM_AVAILABLE or _client is None:
         raise LLMClientError("GOOGLE_API_KEY is not configured")
@@ -90,26 +104,31 @@ def complete(
             response_mime_type="application/json",
         )
 
-    _MAX_RETRIES = 3
-    _RETRY_DELAY = 5  # seconds between retries on 503
-    last_exc: Exception | None = None
-    for attempt in range(_MAX_RETRIES):
+    text: str | None = None
+    for attempt in range(len(RETRY_DELAYS) + 1):
         try:
             response = _client.models.generate_content(
                 model=model,
                 contents=user,
                 config=config,
             )
-            text: str = response.text
+            text = response.text
             break
         except Exception as exc:
-            last_exc = exc
-            if "503" in str(exc) and attempt < _MAX_RETRIES - 1:
-                time.sleep(_RETRY_DELAY)
-                continue
-            raise LLMClientError(f"Gemini API call failed: {exc}") from exc
-    else:
-        raise LLMClientError(f"Gemini API call failed after {_MAX_RETRIES} attempts: {last_exc}")
+            if _is_rate_limit_error(exc) and attempt < len(RETRY_DELAYS):
+                delay = RETRY_DELAYS[attempt]
+                print(
+                    f"[llm_client] Rate limit hit, retrying in {delay}s "
+                    f"(attempt {attempt + 1}/{len(RETRY_DELAYS)})...",
+                    file=sys.stderr,
+                )
+                time.sleep(delay)
+            elif _is_rate_limit_error(exc):
+                raise LLMClientError(
+                    f"Rate-limited after {len(RETRY_DELAYS)} retries: {exc}"
+                ) from exc
+            else:
+                raise LLMClientError(f"Gemini API call failed: {exc}") from exc
 
     if caching_enabled:
         cache[key] = text

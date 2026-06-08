@@ -18,7 +18,7 @@ if "messages" not in st.session_state:
 # --- Sidebar -----------------------------------------------------------------
 
 with st.sidebar:
-    st.caption("Powered by Gemini 2.5 Flash")
+    st.caption("Powered by Gemini 3.1 Flash Lite")
 
     last_response = None
     for msg in reversed(st.session_state.messages):

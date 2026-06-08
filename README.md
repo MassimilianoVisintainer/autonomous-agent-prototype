@@ -4,11 +4,11 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 6 complete** — Escalation pipeline.
+**Slice 7 complete** — Evaluation harness.
 
-The Amri et al. (2025) three-trigger escalation framework is now active: `exceeded_authority` (tool threshold breach), `high_emotion` (VADER compound < −0.5), and `low_confidence` (classification confidence < 0.75, excluding boundary intents). When any trigger fires, the grounding layer produces a warm handoff response instead of an autonomous answer. The architectural skeleton from §3.1.1 through §3.2 of the thesis is complete.
+The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness in `scripts/run_evaluation.py` runs all 130 test queries and writes structured JSON Lines output to `evaluation_results/`. Metric computation is pending (Slice 8).
 
-A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
+A `GOOGLE_API_KEY` must be set before running the app or evaluation. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
 ## Installation
 
@@ -29,15 +29,39 @@ pip install -r requirements.txt
 pytest
 ```
 
-All tests should pass — four data-loader sanity checks from Slice 0 and the per-intent classifier tests from Slice 1.
-
 ### Streamlit app
 
 ```bash
 streamlit run app.py
 ```
 
-Opens a chat interface. Type any customer-support query to see the classified intent and confidence in the response and sidebar reasoning trace.
+Opens a chat interface with the full agent pipeline active — classification, retrieval, tool dispatch, escalation, and grounded response generation.
+
+### Running the evaluation
+
+```bash
+python scripts/run_evaluation.py
+```
+
+Runs all 130 test queries through the agent and writes one JSON object per line to `evaluation_results/eval_<timestamp>.jsonl`. The LLM response cache is automatically disabled for the run so natural LLM variance is captured.
+
+**Robustness:** The LLM client retries rate-limit errors (HTTP 429) automatically with backoff (5s → 15s → 60s) before failing. Rows where the classification or generation LLM call failed (`llm_error`) are treated as incomplete and re-attempted when you rerun with the same `--output` path — so a run degraded by quota exhaustion can be continued the next day by simply running the same command again.
+
+**Flags:**
+
+- `--limit N` — run only the first N queries (useful for smoke-testing)
+- `--output PATH` — override the default timestamped output path
+
+```bash
+python scripts/run_evaluation.py --limit 5
+python scripts/run_evaluation.py --output evaluation_results/my_run.jsonl
+```
+
+**Runtime:** The full 130-query run takes approximately 25–45 minutes depending on Gemini's rate limiting (2 LLM calls per query, 20 RPD free-tier limit).
+
+**Resumability:** If a run is interrupted, rerunning with the same `--output` path will skip queries already completed and continue from where it left off.
+
+Output files land in `evaluation_results/` and are committed to the repository as thesis artefacts.
 
 ## Repository structure
 
@@ -49,22 +73,30 @@ Opens a chat interface. Type any customer-support query to see the classified in
 ├── .gitignore
 ├── app.py
 ├── data/
-│   ├── knowledge_base_outline.csv
+│   ├── knowledge_base.csv
 │   ├── customers.csv
 │   ├── orders.csv
 │   └── test_queries.csv
+├── scripts/
+│   └── run_evaluation.py   # evaluation harness
+├── evaluation_results/     # JSONL output files from evaluation runs
 ├── src/
-│   ├── __init__.py
 │   ├── intents.py          # twelve-intent taxonomy (enum + metadata)
-│   ├── data_loaders.py     # typed CSV loaders returning dataclasses
-│   ├── nlu.py              # keyword classifier (slice 1); LLM classifier in slice 2
-│   ├── retrieval.py        # placeholder — slice 3
-│   ├── tools.py            # placeholder — slice 4
-│   ├── escalation.py       # placeholder — slice 5
-│   ├── grounding.py        # placeholder — slice 6
-│   └── agent.py            # orchestrator (slice 1+)
+│   ├── data_loaders.py     # typed CSV loaders
+│   ├── llm_client.py       # Gemini 2.5 Flash client with cache + retry
+│   ├── nlu.py              # LLM-based intent classifier
+│   ├── retrieval.py        # dense-embedding retrieval (all-MiniLM-L6-v2)
+│   ├── tools.py            # transactional tool layer (order lookup, refund, etc.)
+│   ├── escalation.py       # three-trigger escalation pipeline (VADER + thresholds)
+│   ├── grounding.py        # grounded response generation with citation extraction
+│   └── agent.py            # orchestrator sequencing all pipeline stages
 └── tests/
-    ├── __init__.py
     ├── test_data_loaders.py
-    └── test_nlu.py
+    ├── test_llm_client.py
+    ├── test_nlu.py
+    ├── test_retrieval.py
+    ├── test_grounding.py
+    ├── test_tools.py
+    ├── test_escalation.py
+    └── test_run_evaluation.py
 ```
