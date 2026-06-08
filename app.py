@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 5: Tool layer for transactional intents."""
+"""Streamlit entry point — Slice 6: Escalation pipeline."""
 
 import streamlit as st
 
@@ -8,7 +8,7 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 5 — Tool layer for transactional intents")
+st.caption("Slice 6 — Escalation pipeline")
 
 # --- Session state -----------------------------------------------------------
 
@@ -37,7 +37,30 @@ with st.sidebar:
     else:
         st.write("Type a query to see the reasoning trace.")
 
-    st.caption("Escalation routing is not yet implemented.")
+    # Escalation --------------------------------------------------------------
+    st.header("Escalation")
+    esc = last_response.escalation if last_response is not None else None
+    if esc is not None:
+        if esc.should_escalate:
+            st.markdown("**:red[Escalate to human]**")
+            for t in esc.triggers:
+                st.markdown(f"- `{t}`")
+        else:
+            st.write("Handle autonomously")
+
+        score = esc.emotion_score
+        if score < -0.5:
+            sentiment_label = "strongly negative"
+        elif score < -0.05:
+            sentiment_label = "negative"
+        elif score > 0.05:
+            sentiment_label = "positive"
+        else:
+            sentiment_label = "neutral"
+        st.write(f"**Emotion score:** {score:.2f} ({sentiment_label})")
+        st.caption(esc.reason)
+    else:
+        st.write("Escalation decision will appear here.")
 
     # Citations ---------------------------------------------------------------
     st.header("Citations")
@@ -114,11 +137,8 @@ user_input = st.chat_input("Type your question here...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-
     result = agent.process_query(user_input)
-
     st.session_state.messages.append(
         {"role": "assistant", "content": result.generation.text, "agent_response": result}
     )
-
     st.rerun()

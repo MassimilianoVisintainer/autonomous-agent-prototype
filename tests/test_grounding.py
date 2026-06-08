@@ -194,6 +194,53 @@ def test_generation_with_ok_tool_result_includes_data_in_prompt():
     assert "in_transit" in system_prompt
 
 
+def test_escalation_triggered_uses_handoff_path():
+    from src.escalation import EscalationResult
+    escalation_result = EscalationResult(
+        should_escalate=True,
+        triggers=["exceeded_authority"],
+        emotion_score=-0.1,
+        reason="Escalation triggered: exceeded_authority (tool status: exceeded_authority)",
+    )
+    captured_prompts = []
+
+    def capture(system, user, json_mode=False, model=None):
+        captured_prompts.append(system)
+        return "I'm connecting you with a human agent who can help with this refund."
+
+    with patch.object(llm_client, "complete", side_effect=capture):
+        result = generate_response(
+            "I want a refund on ORD-1003",
+            _classification(Intent.REFUND_REQUEST),
+            SAMPLE_CHUNKS,
+            escalation_result=escalation_result,
+        )
+
+    assert result.method == "llm_handoff"
+    assert len(captured_prompts) == 1
+    assert "handoff" in captured_prompts[0].lower() or "human" in captured_prompts[0].lower()
+
+
+def test_handoff_template_used_when_llm_fails():
+    from src.escalation import EscalationResult
+    from src.grounding import HANDOFF_TEMPLATE
+    escalation_result = EscalationResult(
+        should_escalate=True,
+        triggers=["high_emotion"],
+        emotion_score=-0.8,
+        reason="Escalation triggered: high_emotion (compound -0.80)",
+    )
+    with patch.object(llm_client, "complete", side_effect=LLMClientError("API down")):
+        result = generate_response(
+            "I am furious!",
+            _classification(Intent.COMPLAINT),
+            SAMPLE_CHUNKS,
+            escalation_result=escalation_result,
+        )
+    assert result.method == "handoff_template"
+    assert result.text == HANDOFF_TEMPLATE
+
+
 def test_generation_with_exceeded_authority_tool_result_handled_gracefully():
     from src.tools import ToolResult
     tool_result = ToolResult(

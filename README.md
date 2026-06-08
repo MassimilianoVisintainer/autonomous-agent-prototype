@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 5 complete** — Tool layer for transactional intents.
+**Slice 6 complete** — Escalation pipeline.
 
-Transactional intents (`order_status`, `order_modify`, `order_cancel`, `refund_request`) now read from the orders data and enforce authority thresholds: €100 refund limit, 24-hour cancellation window, modifiable-status check. All operations are read-only at the persistence level for evaluation reproducibility. The Tool execution sidebar panel shows which tool was called and its status. Structural escalation routing is pending (Slice 6).
+The Amri et al. (2025) three-trigger escalation framework is now active: `exceeded_authority` (tool threshold breach), `high_emotion` (VADER compound < −0.5), and `low_confidence` (classification confidence < 0.75, excluding boundary intents). When any trigger fires, the grounding layer produces a warm handoff response instead of an autonomous answer. The architectural skeleton from §3.1.1 through §3.2 of the thesis is complete.
 
 A `GOOGLE_API_KEY` must be set before running the app. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 

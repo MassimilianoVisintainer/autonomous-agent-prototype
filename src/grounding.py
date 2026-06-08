@@ -2,16 +2,13 @@
 
 Implements the prompt-level cite-or-silent discipline: the LLM is instructed to
 ground every claim in the retrieved knowledge-base chunks and to cite the chunks'
-source_doc strings inline using parenthesised notation. Programmatic enforcement
-(NLI critics, confidence-floor rejection, chain-of-verification) is deferred to
-a later slice; this slice instils the discipline at the prompt level and extracts
-citations post-hoc by substring matching.
+source_doc strings inline using parenthesised notation.
 
-Two intents are handled by deterministic templates and never call the LLM:
-  - AMBIGUOUS_QUERY  → clarification request
-  - OUT_OF_SCOPE     → polite refusal with redirection
-All other intents use a single Gemini call with an intent-aware system prompt
-that now includes the structured output of any tool that was called.
+Branching order in generate_response:
+  1. AMBIGUOUS_QUERY  → deterministic clarification template (no LLM)
+  2. OUT_OF_SCOPE     → deterministic refusal template (no LLM)
+  3. should_escalate  → warm handoff LLM call (or HANDOFF_TEMPLATE on error)
+  4. otherwise        → intent-aware grounded LLM call with tool result + chunks
 """
 
 from __future__ import annotations
@@ -27,6 +24,7 @@ from src.llm_client import LLMClientError
 
 if TYPE_CHECKING:
     from src.tools import ToolResult
+    from src.escalation import EscalationResult
 
 
 @dataclass(frozen=True)
@@ -47,6 +45,27 @@ REFUSAL_TEMPLATE = (
     "account, and our policies. Is there something along those lines I can "
     "help with today?"
 )
+
+HANDOFF_TEMPLATE = (
+    "I understand your request and I want to make sure it's handled properly. "
+    "I'm transferring this conversation to a human agent who can help you further. "
+    "They'll reach out to you shortly with a resolution."
+)
+
+HANDOFF_SYSTEM_PROMPT_TEMPLATE = """\
+You are a customer support agent for an EU-based electronics-accessories retailer.
+This conversation is being escalated to a human agent for the following reason(s):
+
+{escalation_context}
+
+Your task is to write a warm, brief handoff message to the customer. Follow these rules:
+1. Acknowledge the customer's specific request (reference the order ID or topic where relevant).
+2. Explain clearly that a human agent will take over and will follow up shortly.
+3. If "high_emotion" is among the triggers, BEGIN with a genuine empathetic sentence that
+   acknowledges the customer's frustration BEFORE mentioning the handoff.
+4. Do NOT attempt to resolve the issue yourself.
+5. Do NOT make specific promises about timing (e.g. "within 2 hours").
+6. Keep the response to one or two short paragraphs."""
 
 GENERATION_SYSTEM_PROMPT_TEMPLATE = """\
 You are a customer support agent for an EU-based electronics-accessories retailer.
@@ -92,13 +111,26 @@ KNOWLEDGE BASE CHUNKS
 {chunks_formatted}"""
 
 
+def _build_handoff_prompt(
+    escalation_result: EscalationResult,
+    tool_result: ToolResult | None,
+) -> str:
+    lines = [f"Firing triggers: {', '.join(escalation_result.triggers)}"]
+    lines.append(f"Escalation reason: {escalation_result.reason}")
+    if tool_result is not None:
+        lines.append(f"Tool called: {tool_result.tool} → status: {tool_result.status}")
+        if tool_result.data:
+            for k, v in tool_result.data.items():
+                lines.append(f"  {k}: {v}")
+    return HANDOFF_SYSTEM_PROMPT_TEMPLATE.format(
+        escalation_context="\n".join(lines)
+    )
+
+
 def _format_tool_result(tool_result: ToolResult | None) -> str:
     if tool_result is None:
         return "No tool was called for this query."
-    lines = [
-        f"Tool: {tool_result.tool}",
-        f"Status: {tool_result.status}",
-    ]
+    lines = [f"Tool: {tool_result.tool}", f"Status: {tool_result.status}"]
     if tool_result.reason:
         lines.append(f"Reason: {tool_result.reason}")
     if tool_result.data:
@@ -139,8 +171,9 @@ def generate_response(
     classification: ClassificationResult,
     retrieved_chunks: list[RetrievedChunk],
     tool_result: ToolResult | None = None,
+    escalation_result: EscalationResult | None = None,
 ) -> GenerationResult:
-    """Generate a grounded response appropriate to the classified intent."""
+    """Generate a response appropriate to intent, tool outcome, and escalation state."""
     if classification.intent == Intent.AMBIGUOUS_QUERY:
         return GenerationResult(
             text=CLARIFICATION_TEMPLATE, citations=[], method="clarification_template"
@@ -150,13 +183,24 @@ def generate_response(
             text=REFUSAL_TEMPLATE, citations=[], method="refusal_template"
         )
 
+    if escalation_result is not None and escalation_result.should_escalate:
+        system_prompt = _build_handoff_prompt(escalation_result, tool_result)
+        try:
+            response_text = llm_client.complete(
+                system=system_prompt, user=query, json_mode=False
+            )
+            return GenerationResult(text=response_text, citations=[], method="llm_handoff")
+        except LLMClientError:
+            return GenerationResult(
+                text=HANDOFF_TEMPLATE, citations=[], method="handoff_template"
+            )
+
     system_prompt = GENERATION_SYSTEM_PROMPT_TEMPLATE.format(
         intent=classification.intent.value,
         confidence=f"{classification.confidence:.2f}",
         tool_result_block=_format_tool_result(tool_result),
         chunks_formatted=_format_chunks(retrieved_chunks),
     )
-
     try:
         response_text = llm_client.complete(
             system=system_prompt, user=query, json_mode=False
