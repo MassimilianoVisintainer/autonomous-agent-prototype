@@ -1,0 +1,272 @@
+{
+  "computed_at": "2026-06-11 08:11:55 UTC",
+  "input_file": "eval_results.jsonl",
+  "intent_accuracy": {
+    "overall_accuracy": 0.9538,
+    "correct": 124,
+    "total": 130,
+    "per_intent": {
+      "order_status": {
+        "correct": 12,
+        "total": 12,
+        "accuracy": 1.0
+      },
+      "order_modify": {
+        "correct": 10,
+        "total": 10,
+        "accuracy": 1.0
+      },
+      "order_cancel": {
+        "correct": 11,
+        "total": 11,
+        "accuracy": 1.0
+      },
+      "refund_request": {
+        "correct": 12,
+        "total": 14,
+        "accuracy": 0.8571
+      },
+      "product_info": {
+        "correct": 11,
+        "total": 12,
+        "accuracy": 0.9167
+      },
+      "return_policy": {
+        "correct": 11,
+        "total": 11,
+        "accuracy": 1.0
+      },
+      "shipping_info": {
+        "correct": 11,
+        "total": 12,
+        "accuracy": 0.9167
+      },
+      "account_help": {
+        "correct": 11,
+        "total": 12,
+        "accuracy": 0.9167
+      },
+      "complaint": {
+        "correct": 10,
+        "total": 10,
+        "accuracy": 1.0
+      },
+      "multi_issue_dispute": {
+        "correct": 7,
+        "total": 8,
+        "accuracy": 0.875
+      },
+      "out_of_scope": {
+        "correct": 10,
+        "total": 10,
+        "accuracy": 1.0
+      },
+      "ambiguous_query": {
+        "correct": 8,
+        "total": 8,
+        "accuracy": 1.0
+      }
+    },
+    "confusion": {
+      "refund_request": {
+        "multi_issue_dispute": 1,
+        "complaint": 1
+      },
+      "shipping_info": {
+        "order_status": 1
+      },
+      "multi_issue_dispute": {
+        "complaint": 1
+      },
+      "product_info": {
+        "shipping_info": 1
+      },
+      "account_help": {
+        "product_info": 1
+      }
+    }
+  },
+  "retrieval": {
+    "rows_with_gold": 74,
+    "mean_precision_at_5": 0.2135,
+    "mean_recall_at_5": 0.7838,
+    "recall_distribution": {
+      "[0.00,0.25)": 8,
+      "[0.25,0.50)": 4,
+      "[0.50,0.75)": 11,
+      "[0.75,1.00)": 0,
+      "[1.00,1.00]": 51
+    }
+  },
+  "tool_calls": {
+    "rows_with_expected": 50,
+    "tier_match_count": 34,
+    "tier_match_rate": 0.68,
+    "order_id_rows": 50,
+    "order_id_match_count": 42,
+    "order_id_match_rate": 0.84,
+    "authority_rows": 20,
+    "authority_appropriate": 8,
+    "authority_appropriate_rate": 0.4,
+    "per_tier": {
+      "1": {
+        "expected": 27,
+        "correct": 10,
+        "rate": 0.3704
+      },
+      "2": {
+        "expected": 16,
+        "correct": 16,
+        "rate": 1.0
+      },
+      "3": {
+        "expected": 8,
+        "correct": 8,
+        "rate": 1.0
+      }
+    }
+  },
+  "escalation": {
+    "true_positives": 16,
+    "false_positives": 1,
+    "false_negatives": 22,
+    "true_negatives": 91,
+    "precision": 0.9412,
+    "recall": 0.4211,
+    "f1": 0.5819,
+    "per_reason": {
+      "high_emotion": {
+        "gt_count": 15,
+        "agent_triggered_count": 10,
+        "tp": 9,
+        "fn": 6,
+        "precision": 0.9,
+        "recall": 0.6
+      },
+      "exceeded_authority": {
+        "gt_count": 20,
+        "agent_triggered_count": 8,
+        "tp": 8,
+        "fn": 12,
+        "precision": 1.0,
+        "recall": 0.4
+      },
+      "out_of_scope": {
+        "gt_count": 11,
+        "agent_triggered_count": 0,
+        "tp": 0,
+        "fn": 11,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "low_confidence": {
+        "gt_count": 0,
+        "agent_triggered_count": 0,
+        "tp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    }
+  },
+  "containment": {
+    "total_contained": 81,
+    "gross_contained": 80,
+    "gross_containment_rate": 0.9877,
+    "net_contained": 79,
+    "net_containment_rate": 0.9753,
+    "total_clarified": 11,
+    "clarification_correct": 9,
+    "clarification_rate": 0.8182
+  },
+  "boundary_pairs": {
+    "total_variant_rows": 44,
+    "transition_pairs": 10,
+    "correct_transitions": 8,
+    "transition_rate": 0.8,
+    "no_transition_pairs": 34,
+    "consistent_no_transition": 33,
+    "consistency_rate": 0.9706,
+    "per_threshold_flag": {
+      "ambiguity_missing_id": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      },
+      "ambiguity_resolved_by_id": {
+        "total": 1,
+        "correct": 0,
+        "rate": 0.0
+      },
+      "cancel_outside_24h_window": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      },
+      "emotion_above_threshold": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      },
+      "emotion_overlay_transactional": {
+        "total": 3,
+        "correct": 2,
+        "rate": 0.6667
+      },
+      "modify_shipped_order": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      },
+      "multi_issue_high_severity": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      },
+      "refund_above_100": {
+        "total": 1,
+        "correct": 1,
+        "rate": 1.0
+      }
+    }
+  },
+  "latency": {
+    "count_included": 130,
+    "count_outliers": 0,
+    "median_ms": 6124.5,
+    "mean_ms": 7738.3,
+    "p90_ms": 19239.4,
+    "p95_ms": 26509.7,
+    "min_ms": 516,
+    "max_ms": 35858,
+    "per_intent_median": {
+      "account_help": 9530,
+      "ambiguous_query": 4687.5,
+      "complaint": 5164.5,
+      "multi_issue_dispute": 10226.5,
+      "order_cancel": 3844,
+      "order_modify": 6382.5,
+      "order_status": 2203,
+      "out_of_scope": 819.0,
+      "product_info": 9055.0,
+      "refund_request": 7312.5,
+      "return_policy": 6202,
+      "shipping_info": 3921.5
+    }
+  },
+  "summary": {
+    "total": 130,
+    "by_harness_status": {
+      "ok": 130
+    },
+    "by_classification_method": {
+      "llm": 130
+    },
+    "by_generation_method": {
+      "llm": 95,
+      "llm_handoff": 17,
+      "refusal_template": 10,
+      "clarification_template": 8
+    }
+  }
+}

@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 7 complete** — Evaluation harness.
+**Slice 8 complete** — Metrics computation.
 
-The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness in `scripts/run_evaluation.py` runs all 130 test queries and writes structured JSON Lines output to `evaluation_results/`. Metric computation is pending (Slice 8).
+The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness in `scripts/run_evaluation.py` runs all 130 test queries and writes structured JSON Lines output to `evaluation_results/`. `scripts/compute_metrics.py` computes the eight §4.4 metrics and writes `metrics_report.md` and `metrics_report.json`. Rubric scoring is pending (Slice 9).
 
 A `GOOGLE_API_KEY` must be set before running the app or evaluation. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
@@ -57,11 +57,21 @@ python scripts/run_evaluation.py --limit 5
 python scripts/run_evaluation.py --output evaluation_results/my_run.jsonl
 ```
 
-**Runtime:** The full 130-query run takes approximately 25–45 minutes depending on Gemini's rate limiting (2 LLM calls per query, 20 RPD free-tier limit).
+**Runtime:** The full 130-query run takes approximately 25–45 minutes depending on Gemini's rate limiting (2 LLM calls per query, 500 RPD free-tier limit on `gemini-3.1-flash-lite`).
 
 **Resumability:** If a run is interrupted, rerunning with the same `--output` path will skip queries already completed and continue from where it left off.
 
 Output files land in `evaluation_results/` and are committed to the repository as thesis artefacts.
+
+## Computing metrics
+
+After running the evaluation, compute the §4.4 metrics:
+
+```bash
+python scripts/compute_metrics.py --input evaluation_results/eval_results.jsonl
+```
+
+Outputs `metrics_report.md` (human-readable, suitable for Chapter 6 quotation) and `metrics_report.json` (machine-readable) in `evaluation_results/`. Use `--output-dir PATH` to override the output directory. The script is re-runnable against any evaluation output JSONL.
 
 ## Repository structure
 
@@ -83,7 +93,7 @@ Output files land in `evaluation_results/` and are committed to the repository a
 ├── src/
 │   ├── intents.py          # twelve-intent taxonomy (enum + metadata)
 │   ├── data_loaders.py     # typed CSV loaders
-│   ├── llm_client.py       # Gemini 2.5 Flash client with cache + retry
+│   ├── llm_client.py       # Gemini 3.1 Flash Lite client with cache + retry
 │   ├── nlu.py              # LLM-based intent classifier
 │   ├── retrieval.py        # dense-embedding retrieval (all-MiniLM-L6-v2)
 │   ├── tools.py            # transactional tool layer (order lookup, refund, etc.)
