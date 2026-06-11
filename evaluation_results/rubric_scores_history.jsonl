@@ -1,0 +1,15 @@
+{"query_id": "Q-002", "dimension": "factual_accuracy", "score": 3, "notes": "", "scored_at": "2026-06-11T08:38:57Z", "archived_at": "2026-06-11T08:41:21Z"}
+{"query_id": "Q-002", "dimension": "completeness", "score": 3, "notes": "", "scored_at": "2026-06-11T08:38:57Z", "archived_at": "2026-06-11T08:41:21Z"}
+{"query_id": "Q-002", "dimension": "tone_appropriateness", "score": 3, "notes": "", "scored_at": "2026-06-11T08:38:57Z", "archived_at": "2026-06-11T08:41:21Z"}
+{"query_id": "Q-002", "dimension": "structural_quality", "score": 3, "notes": "", "scored_at": "2026-06-11T08:38:57Z", "archived_at": "2026-06-11T08:41:21Z"}
+{"query_id": "Q-002", "dimension": "hallucination_present", "score": false, "notes": "", "scored_at": "2026-06-11T08:38:57Z", "archived_at": "2026-06-11T08:41:21Z"}
+{"query_id": "Q-003", "dimension": "factual_accuracy", "score": 5, "notes": "", "scored_at": "2026-06-11T08:40:06Z", "archived_at": "2026-06-11T08:41:29Z"}
+{"query_id": "Q-003", "dimension": "completeness", "score": 5, "notes": "", "scored_at": "2026-06-11T08:40:06Z", "archived_at": "2026-06-11T08:41:29Z"}
+{"query_id": "Q-003", "dimension": "tone_appropriateness", "score": 5, "notes": "", "scored_at": "2026-06-11T08:40:06Z", "archived_at": "2026-06-11T08:41:29Z"}
+{"query_id": "Q-003", "dimension": "structural_quality", "score": 5, "notes": "", "scored_at": "2026-06-11T08:40:06Z", "archived_at": "2026-06-11T08:41:29Z"}
+{"query_id": "Q-003", "dimension": "hallucination_present", "score": false, "notes": "", "scored_at": "2026-06-11T08:40:06Z", "archived_at": "2026-06-11T08:41:29Z"}
+{"query_id": "Q-004", "dimension": "factual_accuracy", "score": 3, "notes": "", "scored_at": "2026-06-11T08:40:16Z", "archived_at": "2026-06-11T08:42:26Z"}
+{"query_id": "Q-004", "dimension": "completeness", "score": 3, "notes": "", "scored_at": "2026-06-11T08:40:16Z", "archived_at": "2026-06-11T08:42:26Z"}
+{"query_id": "Q-004", "dimension": "tone_appropriateness", "score": 3, "notes": "", "scored_at": "2026-06-11T08:40:16Z", "archived_at": "2026-06-11T08:42:26Z"}
+{"query_id": "Q-004", "dimension": "structural_quality", "score": 3, "notes": "", "scored_at": "2026-06-11T08:40:16Z", "archived_at": "2026-06-11T08:42:26Z"}
+{"query_id": "Q-004", "dimension": "hallucination_present", "score": false, "notes": "", "scored_at": "2026-06-11T08:40:16Z", "archived_at": "2026-06-11T08:42:26Z"}

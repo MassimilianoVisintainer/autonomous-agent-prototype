@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 8 complete** — Metrics computation.
+**Slice 9 complete** — Rubric scoring tool.
 
-The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness in `scripts/run_evaluation.py` runs all 130 test queries and writes structured JSON Lines output to `evaluation_results/`. `scripts/compute_metrics.py` computes the eight §4.4 metrics and writes `metrics_report.md` and `metrics_report.json`. Rubric scoring is pending (Slice 9).
+The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness, quantitative metrics script, and qualitative rubric scoring tool are all in place. Run `scripts/compute_metrics.py` for §4.4 metrics and `streamlit run scripts/rubric_scorer.py` for §4.3.3 rubric scoring. Chapter 6 analysis is pending (Slice 10).
 
 A `GOOGLE_API_KEY` must be set before running the app or evaluation. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
@@ -62,6 +62,22 @@ python scripts/run_evaluation.py --output evaluation_results/my_run.jsonl
 **Resumability:** If a run is interrupted, rerunning with the same `--output` path will skip queries already completed and continue from where it left off.
 
 Output files land in `evaluation_results/` and are committed to the repository as thesis artefacts.
+
+## Scoring the rubric
+
+After the evaluation run and metrics computation, score the qualitative rubric on each generated response:
+
+```bash
+streamlit run scripts/rubric_scorer.py
+```
+
+Opens a web UI at http://localhost:8501 where you score each of the 130 queries on the five §4.3.3 dimensions: factual accuracy, completeness, tone appropriateness, structural quality, and hallucination presence. Scores save to `evaluation_results/rubric_scores.jsonl` as each Submit is captured.
+
+The tool is resumable across sessions. To jump to the first unscored query, use the "Resume from first unscored query" button in the sidebar. Re-scoring a query overwrites the visible score and archives the prior score to `evaluation_results/rubric_scores_history.jsonl`.
+
+Suggested workflow: complete the first 10 queries as a calibration sample, review the score distribution in the sidebar, adjust your interpretation of the scale if needed, then proceed through the remaining 120 queries in 20-30 minute sessions.
+
+Use `RUBRIC_INPUT=evaluation_results/my_run.jsonl streamlit run scripts/rubric_scorer.py` to score a different evaluation file.
 
 ## Computing metrics
 
