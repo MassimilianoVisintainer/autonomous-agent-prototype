@@ -4,9 +4,9 @@ A master's thesis prototype implementing an autonomous AI agent for customer sup
 
 ## Status
 
-**Slice 9 complete** — Rubric scoring tool.
+**Slice 10 complete** — Chapter 6 analysis builder.
 
-The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness, quantitative metrics script, and qualitative rubric scoring tool are all in place. Run `scripts/compute_metrics.py` for §4.4 metrics and `streamlit run scripts/rubric_scorer.py` for §4.3.3 rubric scoring. Chapter 6 analysis is pending (Slice 10).
+The full agent pipeline (classification → retrieval → tool dispatch → escalation → generation) is complete. The evaluation harness, quantitative metrics script, qualitative rubric scoring tool, and Chapter 6 analysis builder are all in place. Run `scripts/compute_metrics.py` for §4.4 metrics, `streamlit run scripts/rubric_scorer.py` for §4.3.3 rubric scoring, and `scripts/build_chapter6_analysis.py` to generate the Chapter 6 figures, tables, and synthesis report.
 
 A `GOOGLE_API_KEY` must be set before running the app or evaluation. Copy `.env.example` to `.env` and fill in your Google AI Studio key.
 
@@ -89,6 +89,22 @@ python scripts/compute_metrics.py --input evaluation_results/eval_results.jsonl
 
 Outputs `metrics_report.md` (human-readable, suitable for Chapter 6 quotation) and `metrics_report.json` (machine-readable) in `evaluation_results/`. Use `--output-dir PATH` to override the output directory. The script is re-runnable against any evaluation output JSONL.
 
+## Building Chapter 6 analysis
+
+After computing metrics and scoring the rubric, generate the Chapter 6 figures, tables, and synthesis:
+
+```bash
+python scripts/build_chapter6_analysis.py
+```
+
+Reads `evaluation_results/metrics_report.json`, `evaluation_results/rubric_scores.jsonl`, and `evaluation_results/eval_results.jsonl`. Writes to `evaluation_results/chapter6/`:
+
+- **7 figures** (PNG at 300 DPI + SVG each): per-intent accuracy, escalation precision/recall by reason, rubric score distributions, rubric scores by handling outcome, response latency, intent confusion matrix, boundary-pair transition rates.
+- **`tables.md`** — seven Markdown tables (eight-metric summary, per-intent accuracy, escalation per reason, tool-call correctness by tier, rubric statistics, rubric by handling, hallucination catalogue). Paste directly into Word.
+- **`chapter6_synthesis.md`** — structured analytical scaffold for Chapter 6 prose drafting. Organises findings by RQ (RQ1–RQ4) with embedded evidence pointers to figures and tables. All numerical values are computed from the actual data at runtime.
+
+Override input/output paths with `--metrics-input`, `--rubric-input`, `--eval-input`, `--output-dir`.
+
 ## Repository structure
 
 ```
@@ -104,8 +120,12 @@ Outputs `metrics_report.md` (human-readable, suitable for Chapter 6 quotation) a
 │   ├── orders.csv
 │   └── test_queries.csv
 ├── scripts/
-│   └── run_evaluation.py   # evaluation harness
-├── evaluation_results/     # JSONL output files from evaluation runs
+│   ├── run_evaluation.py         # evaluation harness
+│   ├── compute_metrics.py        # §4.4 quantitative metrics
+│   ├── rubric_scorer.py          # §4.3.3 Streamlit rubric scoring UI
+│   └── build_chapter6_analysis.py  # Chapter 6 figures, tables, synthesis
+├── evaluation_results/     # JSONL output + metrics reports + rubric scores
+│   └── chapter6/           # figures, tables.md, chapter6_synthesis.md (Slice 10 output)
 ├── src/
 │   ├── intents.py          # twelve-intent taxonomy (enum + metadata)
 │   ├── data_loaders.py     # typed CSV loaders
@@ -124,5 +144,8 @@ Outputs `metrics_report.md` (human-readable, suitable for Chapter 6 quotation) a
     ├── test_grounding.py
     ├── test_tools.py
     ├── test_escalation.py
-    └── test_run_evaluation.py
+    ├── test_run_evaluation.py
+    ├── test_compute_metrics.py
+    ├── test_rubric_scorer.py
+    └── test_build_chapter6_analysis.py
 ```
