@@ -6,7 +6,7 @@ held in memory for the lifetime of the process.
 
 Deliberately excludes BM25 hybrid scoring and cross-encoder re-ranking so
 that each component's marginal contribution can be measured independently
-during evaluation (later slices).
+during evaluation.
 """
 
 from __future__ import annotations

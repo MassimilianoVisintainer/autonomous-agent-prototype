@@ -25,7 +25,7 @@ def _rate_limit_exc() -> Exception:
 
 
 # ---------------------------------------------------------------------------
-# Existing tests (Slice 2)
+# Core tests
 # ---------------------------------------------------------------------------
 
 def test_complete_raises_when_api_key_missing(monkeypatch):
@@ -78,7 +78,7 @@ def test_complete_raises_on_api_error(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Retry tests (Slice 7.1)
+# Retry tests
 # ---------------------------------------------------------------------------
 
 def test_complete_retries_on_rate_limit_error(monkeypatch, tmp_path):

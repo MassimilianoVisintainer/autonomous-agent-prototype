@@ -1,10 +1,9 @@
 """Orchestration layer for the customer-support agent.
 
-Slice 6: the orchestrator now performs the full pipeline from §3.1.1 through
-§3.2 of the thesis — classification (src.nlu), dense-embedding retrieval
-(src.retrieval), tool dispatch for transactional intents (src.tools), escalation
-evaluation (src.escalation), and grounded response generation (src.grounding).
-The architectural skeleton described in Chapter 3 is complete as of this slice.
+Performs the full pipeline from §3.1.1 through §3.2 of the thesis —
+classification (src.nlu), dense-embedding retrieval (src.retrieval), tool
+dispatch for transactional intents (src.tools), escalation evaluation
+(src.escalation), and grounded response generation (src.grounding).
 """
 
 from dataclasses import dataclass

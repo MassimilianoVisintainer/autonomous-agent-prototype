@@ -1,4 +1,4 @@
-"""Streamlit entry point — Slice 6: Escalation pipeline."""
+"""Streamlit entry point for the customer-support agent."""
 
 import streamlit as st
 
@@ -8,7 +8,6 @@ from src.data_loaders import load_customers, load_knowledge_base, load_orders, l
 st.set_page_config(page_title="Customer Support Agent — Thesis Prototype", layout="wide")
 
 st.title("Customer Support Agent — Thesis Prototype")
-st.caption("Slice 6 — Escalation pipeline")
 
 # --- Session state -----------------------------------------------------------
 

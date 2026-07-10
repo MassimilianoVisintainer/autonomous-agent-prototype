@@ -2,9 +2,9 @@
 """Build Chapter 6 analysis: figures, tables, and synthesis report.
 
 Consumes three input artifacts:
-  1. evaluation_results/metrics_report.json  — quantitative §4.4 metrics (Slice 8)
-  2. evaluation_results/rubric_scores.jsonl  — qualitative §4.3.3 rubric scores (Slice 9)
-  3. evaluation_results/eval_results.jsonl   — canonical evaluation trace (Slice 7)
+  1. evaluation_results/metrics_report.json  — quantitative §4.4 metrics
+  2. evaluation_results/rubric_scores.jsonl  — qualitative §4.3.3 rubric scores
+  3. evaluation_results/eval_results.jsonl   — canonical evaluation trace
 
 Produces to evaluation_results/chapter6/:
   fig_6_1_intent_accuracy.{png,svg}
