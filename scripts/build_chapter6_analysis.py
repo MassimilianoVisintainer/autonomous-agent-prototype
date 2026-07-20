@@ -282,8 +282,8 @@ def fig_escalation_per_reason(integrated: dict, out_dir: pathlib.Path) -> None:
     ax.set_xticklabels(reasons)
     ax.set_ylim(0, 1.15)
     ax.set_ylabel("Score")
-    ax.set_title("Figure 6.2 — Escalation precision and recall by reason\n"
-                 "(out_of_scope recall=0.0 is structural: boundary-intent exclusion design)")
+    ax.set_title(" Escalation precision and recall by reason\n"
+                 "(out_of_scope: single genuine instance Q-077; pure out-of-scope scored as refusal, \u00a74.5)")
     ax.legend()
     for i, (p, r) in enumerate(zip(prec, rec)):
         ax.text(i - width / 2, p + 0.02, f"{p:.2f}", ha="center", fontsize=8)
@@ -313,7 +313,7 @@ def fig_rubric_distributions(integrated: dict, out_dir: pathlib.Path) -> None:
         ax.set_title(f"{DIM_LABEL[dim]}\n(mean={mean(vals):.2f})", fontsize=10)
         ax.set_xlabel("Score (1-5)")
         ax.set_ylabel("Count")
-    fig.suptitle("Figure 6.3 — Rubric score distributions (modal value in accent colour)", fontsize=11)
+    fig.suptitle("Rubric score distributions (modal value in accent colour)", fontsize=11)
     _save_fig(fig, out_dir, "fig_6_3_rubric_distributions")
 
 
@@ -335,7 +335,7 @@ def fig_rubric_by_handling(integrated: dict, out_dir: pathlib.Path) -> None:
     ax.set_xticklabels([DIM_LABEL[d] for d in LIKERT_DIMS], rotation=10, ha="right")
     ax.set_ylim(0, 5.8)
     ax.set_ylabel("Mean rubric score (1-5)")
-    ax.set_title("Figure 6.4 — Rubric scores by expected handling outcome")
+    ax.set_title("Rubric scores by expected handling outcome")
     ax.legend()
     _save_fig(fig, out_dir, "fig_6_4_rubric_by_handling")
 
@@ -364,7 +364,7 @@ def fig_latency(integrated: dict, out_dir: pathlib.Path) -> None:
     ax2.set_xlabel("Median latency (s)")
     ax2.set_title("Median latency per intent")
 
-    fig.suptitle("Figure 6.5 — Response latency", fontsize=11)
+    fig.suptitle("Response latency", fontsize=11)
     _save_fig(fig, out_dir, "fig_6_5_latency")
 
 
@@ -403,7 +403,7 @@ def fig_confusion_matrix(integrated: dict, out_dir: pathlib.Path) -> None:
     ax.set_yticklabels(short, fontsize=8)
     ax.set_xlabel("Predicted intent")
     ax.set_ylabel("Expected intent")
-    ax.set_title("Figure 6.6 — Intent classification confusion matrix\n"
+    ax.set_title("Intent classification confusion matrix\n"
                  "(dark=correct, red=misclassification, blank=zero)")
     ax.grid(False)
     _save_fig(fig, out_dir, "fig_6_6_confusion_matrix")
@@ -422,7 +422,7 @@ def fig_boundary_transitions(integrated: dict, out_dir: pathlib.Path) -> None:
     ax.set_yticklabels(flags)
     ax.set_xlim(0, 1.15)
     ax.set_xlabel("Transition rate")
-    ax.set_title("Figure 6.7 — Boundary-pair transition rates by threshold flag")
+    ax.set_title("Boundary-pair transition rates by threshold flag")
     for i, (bar, lbl) in enumerate(zip(bars, labels)):
         ax.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
                 lbl, va="center", fontsize=8)
