@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-11 08:11:55 UTC",
+  "computed_at": "2026-07-20 08:33:35 UTC",
   "input_file": "eval_results.jsonl",
   "intent_accuracy": {
     "overall_accuracy": 0.9538,
@@ -129,11 +129,11 @@
   "escalation": {
     "true_positives": 16,
     "false_positives": 1,
-    "false_negatives": 22,
-    "true_negatives": 91,
+    "false_negatives": 12,
+    "true_negatives": 101,
     "precision": 0.9412,
-    "recall": 0.4211,
-    "f1": 0.5819,
+    "recall": 0.5714,
+    "f1": 0.7111,
     "per_reason": {
       "high_emotion": {
         "gt_count": 15,
@@ -152,10 +152,10 @@
         "recall": 0.4
       },
       "out_of_scope": {
-        "gt_count": 11,
+        "gt_count": 1,
         "agent_triggered_count": 0,
         "tp": 0,
-        "fn": 11,
+        "fn": 1,
         "precision": 0.0,
         "recall": 0.0
       },

@@ -32,7 +32,7 @@ from statistics import mean, median, quantiles
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 
-OUTCOME_CATEGORIES = ("contained", "escalated", "clarified")
+OUTCOME_CATEGORIES = ("contained", "escalated", "clarified", "refused")
 
 INTENT_NAMES = (
     "order_status", "order_modify", "order_cancel", "refund_request",

@@ -322,3 +322,29 @@ def test_compute_latency_metrics_per_intent():
     result = compute_latency_metrics(rows)
     assert result.per_intent_median["order_status"] == pytest.approx(5000, abs=1.0)
     assert result.per_intent_median["refund_request"] == pytest.approx(2000, abs=1.0)
+
+
+# ── Relabel regression: out_of_scope refusals must be TN, not FN ────────────────
+
+def test_refused_rows_count_as_true_negatives():
+    """A 'refused'-expected row where the agent did not escalate is a true negative,
+    not a false negative — this is the §4.5 construct-alignment fix."""
+    from scripts.compute_metrics import compute_escalation_metrics
+    rows = [
+        # refused-expected, agent refused (no escalation) → TN
+        {"expected_handling": "refused", "escalation_decision": False,
+         "expected_escalation_reason": None, "escalation_triggers": []},
+        # escalated-expected, agent escalated → TP
+        {"expected_handling": "escalated", "escalation_decision": True,
+         "expected_escalation_reason": "high_emotion", "escalation_triggers": ["high_emotion"]},
+        # escalated-expected, agent missed → FN
+        {"expected_handling": "escalated", "escalation_decision": False,
+         "expected_escalation_reason": "exceeded_authority", "escalation_triggers": []},
+    ]
+    m = compute_escalation_metrics(rows)
+    assert m.true_negatives == 1
+    assert m.false_negatives == 1
+    assert m.true_positives == 1
+    assert m.false_positives == 0
+    # out_of_scope reason must no longer appear as ground truth
+    assert m.per_reason["out_of_scope"]["gt_count"] == 0

@@ -1,6 +1,6 @@
 # Evaluation Metrics Report
 
-Computed on 2026-06-11 08:11:55 UTC from `eval_results.jsonl`.
+Computed on 2026-07-20 08:33:35 UTC from `eval_results.jsonl`.
 
 Total queries evaluated: 130.
 
@@ -69,11 +69,11 @@ Overall:
 
 - True positives: 16
 - False positives: 1
-- False negatives: 22
-- True negatives: 91
+- False negatives: 12
+- True negatives: 101
 - Precision: 0.941
-- Recall: 0.421
-- F1: 0.582
+- Recall: 0.571
+- F1: 0.711
 
 Per-reason breakdown:
 
@@ -81,7 +81,7 @@ Per-reason breakdown:
 |---|---|---|---|---|---|---|
 | high_emotion | 15 | 10 | 9 | 6 | 0.900 | 0.600 |
 | exceeded_authority | 20 | 8 | 8 | 12 | 1.000 | 0.400 |
-| out_of_scope | 11 | 0 | 0 | 11 | 0.000 | 0.000 |
+| out_of_scope | 1 | 0 | 0 | 1 | 0.000 | 0.000 |
 | low_confidence | 0 | 0 | 0 | 0 | 0.000 | 0.000 |
 
 ## 5. Outcome containment
