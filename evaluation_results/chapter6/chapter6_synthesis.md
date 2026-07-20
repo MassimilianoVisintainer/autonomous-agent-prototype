@@ -1,6 +1,6 @@
 # Chapter 6 — Analytical Synthesis
 
-Generated: 2026-07-20 09:34 UTC
+Generated: 2026-07-20 09:47 UTC
 
 - Metrics input: evaluation_results/metrics_report.json
 - Rubric input: evaluation_results/rubric_scores.jsonl
