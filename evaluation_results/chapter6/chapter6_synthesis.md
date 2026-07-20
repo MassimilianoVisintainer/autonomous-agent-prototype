@@ -1,6 +1,6 @@
 # Chapter 6 — Analytical Synthesis
 
-Generated: 2026-06-12 05:25 UTC
+Generated: 2026-07-20 09:34 UTC
 
 - Metrics input: evaluation_results/metrics_report.json
 - Rubric input: evaluation_results/rubric_scores.jsonl
@@ -44,13 +44,13 @@ This document organises the empirical findings from quantitative metrics (§4.4)
 ### Finding 2.1 — Tone well-calibrated but concentrated on escalation paths
 
 - Aggregate tone_appropriateness: mean=3.946; no 1s or 2s observed (Figure 6.3).
-- Cross-tab (Table 6.6, Figure 6.4): escalated queries tone=4.263 vs contained queries tone=3.802.
+- Cross-tab (Table 6.6, Figure 6.4): escalated queries tone=4.464 vs contained queries tone=3.802.
 - Interpretation: the warm-handoff system prompt produces measurably higher tone scores on escalated paths. The baseline (non-escalation) response is professional but generic. This constitutes conditional empathy mode rather than a uniform warm baseline — a design property of the architecture, not a capability gap.
 - For §6.x: this finding supports the discussion of grounding-prompt specificity and the case for emotion-aware generation conditioning even below the escalation threshold.
 
 ### Finding 2.2 — False-negative escalations show verbal acknowledgement without structural routing
 
-- 22 FN escalations: mean tone_appropriateness = 4.000, exceeding contained baseline 3.802.
+- 12 FN escalations: mean tone_appropriateness = 4.250, exceeding contained baseline 3.802.
 - Interpretation: VADER-scored emotion leaked into the LLM generation prompt, producing empathetic language in the response even without triggering the structural escalation path. This is a partially adaptive behaviour — the agent is warmer to distressed customers — but lacks the human-in-the-loop routing that the escalation path provides.
 - For §6.x: graduated escalation responses (verbal acknowledgement + enhanced monitoring flag) as future work.
 
@@ -61,12 +61,12 @@ This document organises the empirical findings from quantitative metrics (§4.4)
 ### Finding 3.1 — Precision excellent; recall is the principal weakness
 
 - Precision: 0.941 (16 TP / 17 positives). One false positive (Q-091). Table 6.3, Figure 6.2.
-- Recall: 0.421 (16 TP / 38 positives-expected). F1: 0.582.
+- Recall: 0.571 (16 TP / 28 positives-expected). F1: 0.711.
 - The precision/recall asymmetry is by design: the three-trigger framework prioritises false-negative avoidance over false-positive avoidance. The low recall exposes the coverage gap on moderate-signal queries.
 
 ### Finding 3.2 — 22 false negatives split into structural and genuine failures
 
-- Structural FNs (11): out_of_scope queries expected-escalated but handled by refusal_template per §3.2 boundary-intent exclusion. Not a miss; a definitional gap between test set vocabulary and agent architecture.
+- Structural FNs (1): out_of_scope queries expected-escalated but handled by refusal_template per §3.2 boundary-intent exclusion. Not a miss; a definitional gap between test set vocabulary and agent architecture.
 - Genuine FNs (~11): moderate-emotion below VADER cutoff (Q-092, Q-095); exceeded_authority without a tool call (Q-080, Q-085, Q-087 — no order ID in query, no tool dispatch, no authority trigger); multi-issue cumulative complexity below any independent trigger threshold.
 - Implication: the three-trigger framework does not accumulate signal across simultaneous but independently sub-threshold stressors. Cumulative complexity is a structural gap.
 
@@ -111,7 +111,7 @@ The metric (authority-exceeded cases with appropriate tool_status: 8/20 = 40.0%)
 The rubric reserves 5 for 'exemplary formatting with headers, bullets, and scannable layout.' The agent produces prose responses; only 15/130 score 5. The 3.754 aggregate mean is partly an artefact of this high 5-bar. The finding (structural_quality is lowest dimension) is valid; its magnitude is partially a calibration effect.
 
 **Caveat 4 — out_of_scope ground-truth vocabulary.**
-The test set marks 11 out_of_scope queries as expected_handling='escalated' with expected_escalation_reason='out_of_scope'. The §3.2 boundary-intent exclusion exempts OUT_OF_SCOPE from the low_confidence escalation trigger; the agent routes these to refusal_template instead. This is a definitional gap: the test set labels a refusal as a missing escalation. The 22 FNs conflate this structural gap with genuine missed escalations. §4.5 should report the structural and genuine FNs separately.
+The test set marks 1 out_of_scope queries as expected_handling='escalated' with expected_escalation_reason='out_of_scope'. The §3.2 boundary-intent exclusion exempts OUT_OF_SCOPE from the low_confidence escalation trigger; the agent routes these to refusal_template instead. This is a definitional gap: the test set labels a refusal as a missing escalation. The 22 FNs conflate this structural gap with genuine missed escalations. §4.5 should report the structural and genuine FNs separately.
 
 ---
 
@@ -119,6 +119,6 @@ The test set marks 11 out_of_scope queries as expected_handling='escalated' with
 
 The quantitative metrics and rubric scores converge on the same structural picture. The agent performs excellently on canonical transactional queries: 95.4% intent accuracy, 98.8% gross containment, factual_accuracy=4.86 on contained queries. Performance degrades predictably at the edges: moderate-emotion below VADER cutoff (FN escalations), multi-issue complexity (lowest rubric scores), and taxonomy-adjacent intent boundaries (six misclassifications).
 
-The tone pattern is the clearest convergence point. Quantitatively, 17 queries were escalated (13.1%); qualitatively, those escalated queries score 4.26 on tone vs 3.80 on contained queries. The rubric confirms what the architecture predicts: warm-handoff prompt drives higher tone scores. The 22 FNs scoring 4.00 on tone — above the contained baseline — suggests the VADER score leaked warm register into generation without structural escalation. Quantitative metrics alone would not surface this nuance.
+The tone pattern is the clearest convergence point. Quantitatively, 17 queries were escalated (13.1%); qualitatively, those escalated queries score 4.46 on tone vs 3.80 on contained queries. The rubric confirms what the architecture predicts: warm-handoff prompt drives higher tone scores. The 12 FNs scoring 4.25 on tone — above the contained baseline — suggests the VADER score leaked warm register into generation without structural escalation. Quantitative metrics alone would not surface this nuance.
 
 The hallucination analysis adds a third layer: 5 of 6 cases trace to a single architectural gap (order-ID gating at tool dispatch, not at orchestrator entry) on the multi_issue_dispute intent — the same intent that scores lowest on completeness (3.38) and structural quality (3.00). The convergence across three measurement methods on the same intent strengthens the conclusion that multi-issue query handling is the principal improvement target for a next prototype iteration.

@@ -8,8 +8,8 @@
 | Retrieval recall@5 (mean) | 0.784 over 74 queries | §4.4.2 |
 | Tool-call tier match rate | 34/50 = 68.0% | §4.4.3 |
 | Escalation precision | 0.941 | §4.4.4 |
-| Escalation recall | 0.421 | §4.4.4 |
-| Escalation F1 | 0.582 | §4.4.4 |
+| Escalation recall | 0.571 | §4.4.4 |
+| Escalation F1 | 0.711 | §4.4.4 |
 | Gross containment | 80/81 = 98.8% | §4.4.5 |
 | Net containment | 79/81 = 97.5% | §4.4.5 |
 | Clarification rate | 9/11 = 81.8% | §4.4.5 |
@@ -37,7 +37,7 @@
 |---|---|---|---|---|---|---|
 | high_emotion | 15 | 10 | 9 | 6 | 0.900 | 0.600 |
 | exceeded_authority | 20 | 8 | 8 | 12 | 1.000 | 0.400 |
-| out_of_scope | 11 | 0 | 0 | 11 | 0.000 | 0.000 |
+| out_of_scope | 1 | 0 | 0 | 1 | 0.000 | 0.000 |
 | low_confidence | 0 | 0 | 0 | 0 | 0.000 | 0.000 |
 
 ## Table 6.4 — Tool-call correctness by tier
@@ -62,7 +62,7 @@
 | Handling | N | Factual acc. | Completeness | Tone appr. | Structural qual. |
 |---|---|---|---|---|---|
 | contained | 81 | 4.864 | 4.543 | 3.802 | 3.938 |
-| escalated | 38 | 3.947 | 3.711 | 4.263 | 3.500 |
+| escalated | 28 | 3.929 | 3.607 | 4.464 | 3.429 |
 | clarified | 11 | 4.182 | 4.182 | 3.909 | 3.273 |
 
 ## Table 6.7 — Hallucination catalogue
